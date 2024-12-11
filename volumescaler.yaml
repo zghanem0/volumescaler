@@ -45,16 +45,16 @@ spec:
                   type: string
                   pattern: "^[0-9]+Gi$"
                   description: Maximum size the PVC can scale to.
-            # status:
-            #   type: object
-            #   properties:
-            #     scaledAt:
-            #       type: string
-            #       format: date-time
-            #       description: Timestamp of the last scaling action.
-            #     reachedMaxSize:
-            #       type: boolean
-            #       description: Indicates whether the PVC has reached its maximum size.
+            status:
+              type: object
+              properties:
+                scaledAt:
+                  type: string
+                  format: date-time
+                  description: Timestamp of the last scaling action.
+                reachedMaxSize:
+                  type: boolean
+                  description: Indicates whether the PVC has reached its maximum size.
       additionalPrinterColumns:
         - name: PVC Name
           type: string
@@ -74,8 +74,8 @@ spec:
         - name: Reached Max Size
           type: boolean
           jsonPath: .status.reachedMaxSize
-      # subresources:
-      #   status: {}
+      subresources:
+        status: {}
 ---
 apiVersion: v1
 kind: ServiceAccount
