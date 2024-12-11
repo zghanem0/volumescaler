@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Variables
-REMOTE_HOST="ec2-user@50.16.80.172"
+REMOTE_HOST="ec2-user@${bastion}"
 REMOTE_DIR="/home/ec2-user/my_project"
 SSH_KEY="~/.ssh/personal.pem"
 
@@ -17,3 +17,5 @@ rsync -avz --exclude '.git' -e "ssh -i ${SSH_KEY}" ./ "${REMOTE_HOST}:${REMOTE_D
 
 # Run the deploy target
 ssh -i "${SSH_KEY}" "${REMOTE_HOST}" "cd ${REMOTE_DIR} && make deploy"
+
+kubectl rollout restart ds/volumescaler-daemonset

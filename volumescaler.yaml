@@ -260,6 +260,59 @@ data:
       sleep 60
     done
 ---
+# apiVersion: apps/v1
+# kind: DaemonSet
+# metadata:
+#   name: volumescaler-daemonset
+#   namespace: default
+# spec:
+#   selector:
+#     matchLabels:
+#       app: volumescaler
+#   template:
+#     metadata:
+#       labels:
+#         app: volumescaler
+#     spec:
+#       serviceAccountName: pvc-resizer
+#       containers:
+#         - name: pvc-resizer
+#           # image: docker push 374031103815.dkr.ecr.us-east-1.amazonaws.com/kubectl:latest
+#           image: 374031103815.dkr.ecr.us-east-1.amazonaws.com/volumescaler:latest
+#           imagePullPolicy: Always
+#           command: ["/bin/sh", "/scripts/script.sh"]
+#           env:
+#             - name: NODE_NAME_ENV
+#               valueFrom:
+#                 fieldRef:
+#                   fieldPath: spec.nodeName
+#           securityContext:
+#             privileged: true
+#             readOnlyRootFilesystem: false
+#             allowPrivilegeEscalation: true
+#           volumeMounts:
+#             - name: script-volume
+#               mountPath: /scripts
+#               readOnly: true
+#             - name: kubelet
+#               mountPath: /var/lib/kubelet
+#               mountPropagation: Bidirectional
+#       volumes:
+#         - name: script-volume
+#           configMap:
+#             name: volumescaler-script
+#         - name: kubelet
+#           hostPath:
+#             path: /var/lib/kubelet
+#             type: Directory
+#       dnsPolicy: ClusterFirst
+#       nodeSelector:
+#         kubernetes.io/os: linux
+#       tolerations:
+#         - operator: Exists
+#       restartPolicy: Always
+#       terminationGracePeriodSeconds: 30
+#       priorityClassName: system-node-critical
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -277,10 +330,10 @@ spec:
       serviceAccountName: pvc-resizer
       containers:
         - name: pvc-resizer
-          # image: docker push 374031103815.dkr.ecr.us-east-1.amazonaws.com/kubectl:latest
           image: 374031103815.dkr.ecr.us-east-1.amazonaws.com/volumescaler:latest
           imagePullPolicy: Always
-          command: ["/bin/sh", "/scripts/script.sh"]
+          # The Go binary should be compiled to run as PID 1 by default
+          # If needed, specify command/args if your binary requires them
           env:
             - name: NODE_NAME_ENV
               valueFrom:
@@ -291,16 +344,10 @@ spec:
             readOnlyRootFilesystem: false
             allowPrivilegeEscalation: true
           volumeMounts:
-            - name: script-volume
-              mountPath: /scripts
-              readOnly: true
             - name: kubelet
               mountPath: /var/lib/kubelet
               mountPropagation: Bidirectional
       volumes:
-        - name: script-volume
-          configMap:
-            name: volumescaler-script
         - name: kubelet
           hostPath:
             path: /var/lib/kubelet

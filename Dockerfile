@@ -1,14 +1,15 @@
 FROM golang:1.23-alpine AS builder
 WORKDIR /app
 
-# Copy just go.mod and go.sum first
+# Copy module files first
 COPY go.mod go.sum ./
-
-# Download dependencies
 RUN go mod download
 
-# Copy the rest of your files
+# Copy the rest of your source code
 COPY . .
+
+# Ensure dependencies are tidy and pinned
+RUN go mod tidy
 
 # Build the binary
 RUN go build -o volumescaler .
@@ -16,4 +17,5 @@ RUN go build -o volumescaler .
 FROM alpine:3.17
 WORKDIR /app
 COPY --from=builder /app/volumescaler .
+RUN chmod +x /app/volumescaler
 ENTRYPOINT ["./volumescaler"]
