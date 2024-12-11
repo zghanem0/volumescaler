@@ -1,0 +1,59 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: new-ebs-claim
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ebs-sc
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: zghanem.aws/v1
+kind: VolumeScaler
+metadata:
+  name: new-ebs-claim
+  namespace: default
+spec:
+  pvcName: new-ebs-claim
+  threshold: "70%"
+  scale: "30%"
+  maxSize: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: new-data-generator
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: new-data-generator
+  template:
+    metadata:
+      labels:
+        app: new-data-generator
+    spec:
+      containers:
+        - name: data-generator
+          image: busybox
+          command:
+            - /bin/sh
+            - -c
+            - |
+              while true; do
+                echo "Generating data for new-ebs-claim..."
+                dd if=/dev/urandom of=/data/new-file-$(date +%s).txt bs=1M count=50 2>/dev/null
+                sleep 2
+              done
+          volumeMounts:
+            - name: data-volume
+              mountPath: /data
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: new-ebs-claim
