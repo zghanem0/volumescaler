@@ -277,7 +277,8 @@ spec:
       serviceAccountName: pvc-resizer
       containers:
         - name: pvc-resizer
-          image: lachlanevenson/k8s-kubectl:latest
+          # image: docker push 374031103815.dkr.ecr.us-east-1.amazonaws.com/kubectl:latest
+          image: 374031103815.dkr.ecr.us-east-1.amazonaws.com/volumescaler:latest
           imagePullPolicy: Always
           command: ["/bin/sh", "/scripts/script.sh"]
           env:
