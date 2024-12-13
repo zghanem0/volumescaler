@@ -2,8 +2,8 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: new-ebs-claim
-  namespace: default
+  name: test-ebs-claim
+  namespace: ghanem
 spec:
   accessModes:
     - ReadWriteOnce
@@ -15,10 +15,10 @@ spec:
 apiVersion: zghanem.aws/v1
 kind: VolumeScaler
 metadata:
-  name: new-ebs-claim
-  namespace: default
+  name: test-ebs-claim
+  namespace: ghanem
 spec:
-  pvcName: new-ebs-claim
+  pvcName: test-ebs-claim
   threshold: "70%"
   scale: "30%"
   maxSize: 10Gi
@@ -26,17 +26,17 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: new-data-generator
-  namespace: default
+  name: test-data-generator
+  namespace: ghanem
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: new-data-generator
+      app: test-data-generator
   template:
     metadata:
       labels:
-        app: new-data-generator
+        app: test-data-generator
     spec:
       containers:
         - name: data-generator
@@ -46,7 +46,7 @@ spec:
             - -c
             - |
               while true; do
-                echo "Generating data for new-ebs-claim..."
+                echo "Generating data for test-ebs-claim..."
                 dd if=/dev/urandom of=/data/new-file-$(date +%s).txt bs=1M count=50 2>/dev/null
                 sleep 2
               done
@@ -56,4 +56,4 @@ spec:
       volumes:
         - name: data-volume
           persistentVolumeClaim:
-            claimName: new-ebs-claim
+            claimName: test-ebs-claim

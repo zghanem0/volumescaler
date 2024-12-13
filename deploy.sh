@@ -11,10 +11,6 @@ ssh -i "${SSH_KEY}" "${REMOTE_HOST}" "sudo mkdir -p ${REMOTE_DIR} && sudo chown 
 # Use rsync to copy files, excluding the .git directory
 rsync -avz --exclude '.git' -e "ssh -i ${SSH_KEY}" ./ "${REMOTE_HOST}:${REMOTE_DIR}"
 
-# (Optional) Add ec2-user to the docker group if you want to eventually run docker without sudo
-# ssh -i "${SSH_KEY}" "${REMOTE_HOST}" "sudo usermod -aG docker ec2-user"
-# Note: This requires re-logging in before taking effect. If you rely on sudo in Makefile, this step isn’t needed.
-
 # Run the deploy target
 ssh -i "${SSH_KEY}" "${REMOTE_HOST}" "cd ${REMOTE_DIR} && make deploy"
 
