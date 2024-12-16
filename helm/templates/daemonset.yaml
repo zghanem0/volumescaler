@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: volumescaler-daemonset
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: volumescaler
+spec:
+  selector:
+    matchLabels:
+      app: volumescaler
+  template:
+    metadata:
+      labels:
+        app: volumescaler
+    spec:
+      serviceAccountName: {{ include "volumescaler.serviceAccountName" . }}
+      containers:
+        - name: volumescaler
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: NODE_NAME_ENV
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: METRIC_COLLECTION_INTERVAL
+              value: "{{ .Values.config.metricCollectionInterval }}"
+            - name: LOG_LEVEL
+              value: "{{ .Values.config.logLevel }}"
+            - name: MAX_RETRY_ATTEMPTS
+              value: "{{ .Values.config.maxRetryAttempts }}"
+          resources:
+            limits:
+              cpu: {{ .Values.resources.limits.cpu }}
+              memory: {{ .Values.resources.limits.memory }}
+            requests:
+              cpu: {{ .Values.resources.requests.cpu }}
+              memory: {{ .Values.resources.requests.memory }}
+          ports:
+            - containerPort: 2112
+              name: metrics
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 2112
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 2112
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          securityContext:
+            privileged: true
+            readOnlyRootFilesystem: false
+            allowPrivilegeEscalation: true
+          volumeMounts:
+            - name: kubelet
+              mountPath: /var/lib/kubelet
+              mountPropagation: Bidirectional
+      volumes:
+        - name: kubelet
+          hostPath:
+            path: /var/lib/kubelet
+            type: Directory
+      dnsPolicy: ClusterFirst
+      nodeSelector:
+        {{- toYaml .Values.nodeSelector | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.tolerations | nindent 8 }}
+      affinity:
+        {{- toYaml .Values.affinity | nindent 8 }}
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      priorityClassName: system-node-critical

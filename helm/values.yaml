@@ -1,0 +1,41 @@
+replicaCount: 1
+
+image:
+  repository: ghcr.io/yourusername/volumescaler
+  pullPolicy: Always
+  tag: "latest"
+
+serviceAccount:
+  create: true
+  name: volumescaler-sa
+  annotations: {}  # Add IRSA annotations if using IRSA
+
+rbac:
+  create: true
+  clusterRole: true
+
+resources:
+  limits:
+    cpu: "200m"
+    memory: "256Mi"
+  requests:
+    cpu: "100m"
+    memory: "128Mi"
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+config:
+  metricCollectionInterval: "60" # in seconds
+  logLevel: "INFO"
+  maxRetryAttempts: "5"
+
+leaderElection:
+  enable: true
+  namespace: kube-system
+  name: volumescaler-controller-lock
+
+prometheus:
+  enabled: true
+  port: 2112

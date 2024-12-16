@@ -1,0 +1,36 @@
+# github-actions-sa.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: github-actions-sa
+  namespace: github-actions
+---
+# github-actions-rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: github-actions-role
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "services", "deployments", "persistentvolumeclaims", "events"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "daemonsets", "statefulsets"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["zghanem.aws"]
+    resources: ["volumescalers", "volumescalers/status"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: github-actions-rolebinding
+subjects:
+  - kind: ServiceAccount
+    name: github-actions-sa
+    namespace: github-actions
+roleRef:
+  kind: ClusterRole
+  name: github-actions-role
+  apiGroup: rbac.authorization.k8s.io
+---

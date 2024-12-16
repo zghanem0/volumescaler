@@ -1,0 +1,60 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.18'
+
+      - name: Install Dependencies
+        run: |
+          go mod tidy
+
+      - name: Run Linters
+        run: |
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.46.2
+          golangci-lint run
+
+      - name: Run Unit Tests
+        run: |
+          go test -v ./...
+
+      - name: Run Integration Tests
+        run: |
+          go test -tags=integration -v ./...
+
+      - name: Build Docker Image
+        run: |
+          docker build -t ghcr.io/${{ github.repository_owner }}/volumescaler:${{ github.sha }} .
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push Docker Image
+        run: |
+          docker push ghcr.io/${{ github.repository_owner }}/volumescaler:${{ github.sha }}
+
+      - name: Scan Docker Image for Vulnerabilities
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/${{ github.repository_owner }}/volumescaler:${{ github.sha }}
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true

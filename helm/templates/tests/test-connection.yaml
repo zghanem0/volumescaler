@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: volumescaler-test-connection
+  namespace: {{ .Release.Namespace }}
+  labels:
+    helm.sh/chart: volumescaler-{{ .Chart.Version }}
+    app.kubernetes.io/name: volumescaler
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: test-connection
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['-q', '-O-', 'http://localhost:2112/healthz']
+  restartPolicy: Never
